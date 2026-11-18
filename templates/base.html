@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}投稿審查{% endblock %}｜投稿審查</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20261118-bear2">
+  <script src="{{ url_for('static', path='app.js') }}" defer></script>
+</head>
+<body data-page="{{ page }}" data-id="{{ submission_id | default('') }}" data-mode="{{ mode | default('') }}">
+<header class="top">
+  <div class="wrap top-inner">
+    <a href="/" class="brand"><span class="mark bear-mark" aria-hidden="true"><img src="{{ url_for('static', path='bear.jpg') }}" width="44" height="44" alt=""></span> 投稿審查</a>
+    {% if page != 'login' %}
+    <div class="profile"><span id="identity"></span><button class="quiet" id="logout" type="button">登出</button></div>
+    {% endif %}
+  </div>
+</header>
+<main class="wrap {% if page == 'login' %}login-main{% else %}workspace{% endif %}">
+  {% if page in ('editor', 'review') %}
+  <nav class="menu" aria-label="編輯清單">
+    <a href="/editor/submissions" {% if not mode %}aria-current="page"{% endif %}>待審查清單</a>
+    <a href="/editor/submissions?mode=history" {% if mode == 'history' %}aria-current="page"{% endif %}>通過、退回稿件</a>
+  </nav>
+  {% endif %}
+  <p id="message" class="message" role="status" hidden></p>
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

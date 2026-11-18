@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}登入{% endblock %}
+{% block content %}
+<section class="login-panel">
+  <div class="login-intro">
+    <span class="mark large bear-mark" aria-hidden="true"><img src="{{ url_for('static', path='bear.jpg') }}" width="76" height="76" alt=""></span>
+    <h1>投稿審查</h1>
+    <p>作者提交稿件，編輯查閱與審查。</p>
+  </div>
+  <form class="login-form" id="login" method="post" action="/api/auth/login">
+    <h2>帳號登入</h2>
+    <p class="muted">登入後將依帳號身分進入作者或編輯頁面。</p>
+    <label>帳號 Email <input name="username" type="email" autocomplete="username" required></label>
+    <label>密碼 <input name="password" type="password" autocomplete="current-password" maxlength="72" required></label>
+    <button class="primary" type="submit">登入 <span aria-hidden="true">→</span></button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}審查稿件{% endblock %}
+{% block content %}
+<header class="section-head"><div><p class="kicker">編輯</p><h1>審查稿件</h1></div><a class="quiet" href="/editor/submissions">返回待審清單</a></header>
+<article class="panel fields" id="review" hidden>
+  <span class="badge in_review">審查中</span>
+  <h2 id="article-title"></h2>
+  <p class="muted" id="article-byline"></p>
+  <div class="article-content" id="article-content"></div>
+  <div class="actions">
+    <button class="primary review-action" id="approve" type="button">通過稿件</button>
+    <button class="danger review-action" id="return" type="button">退回稿件</button>
+  </div>
+</article>
+<dialog id="return-dialog" aria-labelledby="return-title">
+  <form id="return-form">
+    <h2 id="return-title">退回稿件</h2>
+    <label>建議修改內容<textarea name="revision_note" rows="6" maxlength="5000" required placeholder="請說明需要補充或修改的地方"></textarea></label>
+    <p id="return-error" role="alert" hidden></p>
+    <div class="actions"><button class="danger review-action" type="submit">確認退回</button><button class="quiet" id="cancel-return" type="button">取消</button></div>
+  </form>
+</dialog>
+{% endblock %}

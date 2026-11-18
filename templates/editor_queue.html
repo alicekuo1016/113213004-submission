@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}待審稿件{% endblock %}
+{% block content %}
+<header class="section-head"><div><p class="kicker">編輯</p><h1>{{ {"history":"通過、退回稿件"}.get(mode, "待審稿件") }}</h1></div></header>
+<section class="panel">
+  <div class="table-scroll"><table>
+    <thead><tr><th>作者</th><th>類別</th><th>標題</th>{% if mode == 'history' %}<th>結果</th><th>審查時間</th>{% endif %}<th>操作</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p class="empty" id="empty">載入中…</p>
+</section>
+<dialog id="history-detail" aria-labelledby="history-title">
+  <div class="dialog-heading"><h2 id="history-title"></h2><button class="quiet" id="close-history" type="button">關閉</button></div>
+  <p id="history-meta" class="muted"></p>
+  <div id="history-content" class="article-content"></div>
+  <section class="feedback"><h3>建議修改內容</h3><p id="history-note"></p></section>
+</dialog>
+{% endblock %}

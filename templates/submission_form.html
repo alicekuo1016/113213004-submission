@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ "編輯稿件" if submission_id else "新增稿件" }}{% endblock %}
+{% block content %}
+<header class="section-head"><div><p class="kicker">作者</p><h1>{{ "編輯稿件" if submission_id else "新增稿件" }}</h1></div><a class="quiet" href="/author/submissions">返回稿件清單</a></header>
+<form id="submission-form" class="panel fields">
+  <fieldset disabled>
+    <label>類別 <input name="category" required></label>
+    <label>標題 <input name="title" required></label>
+    <label>文章內容 <textarea name="content" rows="12" required></textarea></label>
+    <button class="primary" type="submit">儲存稿件</button>
+  </fieldset>
+</form>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}我的稿件{% endblock %}
+{% block content %}
+<header class="section-head">
+  <div><p class="kicker">作者</p><h1>我的稿件</h1></div>
+  <a class="primary" href="/author/submissions/new">＋ 新增投稿</a>
+</header>
+<div class="status-grid" aria-label="稿件狀態統計">
+  <div class="stat draft"><span>編輯中</span><strong id="draft-count">–</strong></div>
+  <div class="stat in_review"><span>審查中</span><strong id="in_review-count">–</strong></div>
+  <div class="stat approved"><span>已通過</span><strong id="approved-count">–</strong></div>
+</div>
+<section class="panel">
+  <div class="table-scroll"><table>
+    <thead><tr><th>類別</th><th>標題</th><th>審查狀態</th><th>操作</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+  <p class="empty" id="empty">載入中…</p>
+</section>
+<dialog id="author-detail" aria-labelledby="detail-title">
+  <div class="dialog-heading"><h2 id="detail-title"></h2><button class="quiet" id="close-detail" type="button">關閉</button></div>
+  <p id="detail-meta" class="muted"></p>
+  <div id="detail-content" class="article-content"></div>
+  <section class="feedback"><h3>建議修改內容</h3><p id="detail-note"></p></section>
+</dialog>
+{% endblock %}

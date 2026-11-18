@@ -1,0 +1,6 @@
+__pycache__/
+.env
+.pgdata/
+.pgdata-local/
+.pgpass
+.postgres.log
