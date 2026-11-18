@@ -7,6 +7,27 @@ const statusText = { draft: "編輯中", in_review: "審查中", approved: "已�
 const titles = { delete: "刪除", submit: "送審", approve: "通過", return: "退回" };
 const byId = (name) => document.getElementById(name);
 const roleHome = (role) => role === "editor" ? "/editor/submissions" : "/author/submissions";
+const toastStorageKey = "submission-pending-toast";
+
+function toast(text, isError = false) {
+  const element = textNode("div", "", isError ? "toast toast-error" : "toast");
+  element.append(textNode("span", text));
+  const close = textNode("button", "×", "toast-close");
+  close.type = "button";
+  close.setAttribute("aria-label", "關閉通知");
+  const timer = window.setTimeout(() => element.remove(), 6000);
+  close.addEventListener("click", () => {
+    window.clearTimeout(timer);
+    element.remove();
+  });
+  element.append(close);
+  byId("toast-region").append(element);
+}
+
+function navigateWithToast(url, text) {
+  sessionStorage.setItem(toastStorageKey, text);
+  navigate(url);
+}
 
 async function api(path, options) {
   const headers = new Headers(options?.headers);
@@ -17,6 +38,7 @@ async function api(path, options) {
       const token = response.headers.get("X-Tab-Session");
       if (!token) throw new Error("登入失敗，請重新登入。");
       sessionStorage.setItem("submission-tab-session", token);
+      sessionStorage.removeItem(toastStorageKey);
     }
     if (path === "/api/auth/logout") sessionStorage.removeItem("submission-tab-session");
     return response.status === 204 ? null : response.json();
@@ -25,13 +47,14 @@ async function api(path, options) {
   if (response.status === 401 && page !== "login") {
     sessionStorage.removeItem("submission-tab-session");
     navigate("/login", true);
-    return null;
+    throw new Error("登入已失效，請重新登入。");
   }
   const body = await response.json().catch(() => ({}));
   throw new Error(typeof body.detail === "string" ? body.detail : "無法完成操作，請檢查輸入後再試一次。");
 }
 
 function showMessage(text, isError = false) {
+  toast(text, isError);
   const element = byId("message");
   element.textContent = text;
   element.classList.toggle("error", isError);
@@ -82,6 +105,7 @@ function showRows(items, makeRow, emptyText) {
 async function loadAuthor() {
   const items = await api(authorApi);
   if (!items) return;
+  renderNotifications(items);
   for (const status of Object.keys(statusText)) {
     byId(`${status}-count`).textContent = items.filter((item) => item.status === status).length;
   }
@@ -121,8 +145,8 @@ async function loadAuthor() {
 
 async function authorAction(submissionId, action) {
   await mutate(`${authorApi}/${submissionId}`, action, async () => {
+    toast(action === "delete" ? "已刪除稿件。" : "已送出投稿。");
     await loadAuthor();
-    showMessage(action === "delete" ? "已刪除稿件。" : "已送出投稿。");
   });
 }
 
@@ -146,7 +170,7 @@ async function loadForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (result) navigate("/author/submissions");
+      if (result) navigateWithToast("/author/submissions", id ? "稿件修改已儲存。" : "已新增稿件。");
     });
   });
 }
@@ -207,7 +231,7 @@ async function loadReview() {
   byId("article-content").textContent = item.content;
   const approve = byId("approve");
   approve.addEventListener("click", () => run(approve, () =>
-    mutate(path, "approve", () => navigate("/editor/submissions?mode=history"))));
+    mutate(path, "approve", () => navigateWithToast("/editor/submissions?mode=history", "稿件已通過，審查紀錄已保存。"))));
   const dialog = wireDialog("return-dialog", "cancel-return");
   byId("return").addEventListener("click", () => {
     byId("return-error").hidden = true;
@@ -229,7 +253,7 @@ async function loadReview() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ revision_note: note }),
       });
-      if (result) navigate("/editor/submissions?mode=history");
+      if (result) navigateWithToast("/editor/submissions?mode=history", "稿件已退回，修改建議已傳給作者。");
     } catch (error) {
       byId("return-error").textContent = error.message;
       byId("return-error").hidden = false;
@@ -249,6 +273,65 @@ function navigate(url, replace = false) {
   window.setTimeout(() => {
     replace ? location.replace(url) : location.assign(url);
   }, 180);
+}
+
+function renderNotifications(items) {
+  if (!byId("notification-bell")) return;
+  const returned = items.filter((item) => item.status === "draft" && item.revision_note);
+  const badge = byId("notification-count");
+  badge.textContent = returned.length;
+  badge.hidden = returned.length === 0;
+  byId("notification-bell").setAttribute("aria-label", `退回稿件通知，${returned.length} 篇待修改`);
+  const links = returned.map((item) => {
+    const anchor = document.createElement("a");
+    anchor.className = "notification-item";
+    anchor.href = `/author/submissions?detail=${item.id}`;
+    anchor.append(textNode("strong", item.title), textNode("span", item.revision_note));
+    return anchor;
+  });
+  byId("notification-items").replaceChildren(...(links.length ? links : [textNode("p", "目前沒有待修改的退回稿件。", "muted")]));
+}
+
+async function setupNotifications() {
+  const bell = byId("notification-bell");
+  if (!bell) return;
+  const panel = byId("notification-panel");
+  function close() {
+    panel.hidden = true;
+    bell.setAttribute("aria-expanded", "false");
+  }
+  bell.addEventListener("click", () => {
+    panel.hidden = !panel.hidden;
+    bell.setAttribute("aria-expanded", String(!panel.hidden));
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".notification-wrap")) close();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !panel.hidden) {
+      close();
+      bell.focus();
+    }
+  });
+  let refreshing = false;
+  async function refresh() {
+    if (refreshing || document.hidden) return;
+    refreshing = true;
+    try {
+      const items = await api(authorApi);
+      if (items) renderNotifications(items);
+    } catch {
+      // 暫時無法連線時保留現有通知，稍後再次查詢。
+    } finally {
+      refreshing = false;
+    }
+  }
+  if (page !== "author") await refresh();
+  window.setInterval(refresh, 30000);
+  window.addEventListener("focus", refresh);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refresh();
+  });
 }
 
 document.addEventListener("click", (event) => {
@@ -283,6 +366,9 @@ async function start() {
     return;
   }
   byId("identity").textContent = `${user.name} · ${user.role === "author" ? "作者" : "編輯"}`;
+  const pendingToast = sessionStorage.getItem(toastStorageKey);
+  sessionStorage.removeItem(toastStorageKey);
+  if (pendingToast) toast(pendingToast);
   const logout = byId("logout");
   logout.addEventListener("click", () => run(logout, async () => {
     await api("/api/auth/logout", { method: "POST" });
@@ -290,6 +376,11 @@ async function start() {
   }));
   if (page === "author") wireDialog("author-detail", "close-detail");
   await { author: loadAuthor, form: loadForm, editor: loadEditor, review: loadReview }[page]();
+  await setupNotifications();
+  if (page === "author") {
+    const detailId = new URLSearchParams(location.search).get("detail");
+    if (detailId && /^[1-9]\d*$/.test(detailId)) await showAuthorDetail(detailId);
+  }
 }
 
 start().catch((error) => {

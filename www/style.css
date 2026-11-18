@@ -105,6 +105,31 @@ main.workspace{
 .bear-mark{position:relative;width:44px;height:44px;overflow:hidden;background:#fff;flex:0 0 44px}
 .bear-mark.large{width:76px;height:76px}
 .bear-mark img{position:absolute;inset:0;display:block;width:100%;height:100%;max-width:100%;object-fit:cover;object-position:50% 55%;transform:scale(1.65)}
+.toast-region{
+  position:fixed;
+  top:calc(16px + env(safe-area-inset-top, 0px));
+  inset-inline:0;
+  z-index:1000;
+  display:grid;
+  gap:10px;
+  width:min(380px,calc(100% - 32px));
+  margin-inline:auto;
+  pointer-events:none;
+}
+.toast{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;background:#e7f4ed;color:#285b42;border:1px solid #a8d1ba;border-radius:16px;box-shadow:0 8px 25px #9bb9ce;pointer-events:auto;animation:page-enter .25s ease;overflow-wrap:anywhere}
+.toast-error{background:#fff0f2;color:#963b50;border-color:#e8b7c3}
+.toast-close{border:0;background:none;color:inherit;font-size:1.4rem;padding:0 5px;flex-shrink:0}
+.notification-wrap{position:relative}
+.bell-button{position:relative;padding:9px 11px}
+.notification-count{position:absolute;top:-7px;right:-7px;min-width:21px;height:21px;border-radius:12px;padding:1px 5px;background:#d95f76;color:#fff;font-size:.75rem;font-weight:700;border:2px solid #fff;line-height:15px}
+.notification-panel{position:absolute;top:calc(100% + 12px);right:0;z-index:100;width:min(360px,calc(100vw - 32px));max-height:65vh;overflow:auto;background:#fff;color:#234464;border:1px solid #bfd9ef;border-radius:18px;padding:18px;box-shadow:0 10px 30px #9bb9ce}
+.notification-panel h2{font-size:1.1rem}
+.notification-panel p{font-size:.9rem}
+.notification-item{display:grid;gap:5px;padding:12px 4px;border-top:1px solid #dce9f5}
+.notification-item strong{overflow-wrap:anywhere;color:#316da8}
+.notification-item span{color:#62788d;font-size:.85rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.notification-item:hover{background:#f1f7fd}
+@media(max-width:640px){.notification-panel{position:fixed;top:85px;right:16px}.profile{justify-content:flex-end}}
 @media(max-width:640px){
   main.workspace{margin-block:18px;padding:20px 14px;border-radius:18px}
 }

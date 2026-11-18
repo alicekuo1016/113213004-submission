@@ -4,15 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}投稿審查{% endblock %}｜投稿審查</title>
-  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20261118-bear2">
-  <script src="{{ url_for('static', path='app.js') }}?v=20261118-tab-session" defer></script>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20261118-toast-top">
+  <script src="{{ url_for('static', path='app.js') }}?v=20261118-notices" defer></script>
 </head>
 <body data-page="{{ page }}" data-id="{{ submission_id | default('') }}" data-mode="{{ mode | default('') }}">
 <header class="top">
   <div class="wrap top-inner">
     <a href="/" class="brand"><span class="mark bear-mark" aria-hidden="true"><img src="{{ url_for('static', path='bear.jpg') }}" width="44" height="44" alt=""></span> 投稿審查</a>
     {% if page != 'login' %}
-    <div class="profile"><span id="identity"></span><button class="quiet" id="logout" type="button">登出</button></div>
+    <div class="profile">
+      <span id="identity"></span>
+      {% if page in ('author', 'form') %}
+      <div class="notification-wrap">
+        <button class="quiet bell-button" id="notification-bell" type="button"
+                aria-label="退回稿件通知" aria-expanded="false" aria-controls="notification-panel">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span id="notification-count" class="notification-count" hidden></span>
+        </button>
+        <section id="notification-panel" class="notification-panel" aria-label="退回稿件通知" hidden>
+          <h2>退回稿件通知</h2>
+          <p class="muted">查看建議，修改後可重新送審。</p>
+          <div id="notification-items"></div>
+        </section>
+      </div>
+      {% endif %}
+      <button class="quiet" id="logout" type="button">登出</button>
+    </div>
     {% endif %}
   </div>
 </header>
@@ -26,5 +43,6 @@
   <p id="message" class="message" role="status" hidden></p>
   {% block content %}{% endblock %}
 </main>
+<div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="false"></div>
 </body>
 </html>
