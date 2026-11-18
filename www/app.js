@@ -9,10 +9,21 @@ const byId = (name) => document.getElementById(name);
 const roleHome = (role) => role === "editor" ? "/editor/submissions" : "/author/submissions";
 
 async function api(path, options) {
-  const response = await fetch(path, options);
-  if (response.ok) return response.status === 204 ? null : response.json();
+  const headers = new Headers(options?.headers);
+  headers.set("X-Tab-Session", sessionStorage.getItem("submission-tab-session") || "");
+  const response = await fetch(path, { ...options, headers });
+  if (response.ok) {
+    if (path === "/api/auth/login") {
+      const token = response.headers.get("X-Tab-Session");
+      if (!token) throw new Error("登入失敗，請重新登入。");
+      sessionStorage.setItem("submission-tab-session", token);
+    }
+    if (path === "/api/auth/logout") sessionStorage.removeItem("submission-tab-session");
+    return response.status === 204 ? null : response.json();
+  }
 
   if (response.status === 401 && page !== "login") {
+    sessionStorage.removeItem("submission-tab-session");
     navigate("/login", true);
     return null;
   }

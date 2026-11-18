@@ -111,3 +111,5 @@ FastAPI 啟動時會等待連線池取得連線。每條路由使用 `Depends(ge
 4. 登出後用 `editor@example.test` 登入，便可從待審清單審查已送出的稿件。
 
 本機 session 有八小時有效期。要讓重啟後仍可使用現有 session，可執行 `python -c "import secrets; print(secrets.token_urlsafe(32))"`，把輸出填入 `.env` 的 `SESSION_SECRET`。未設定時，服務每次重啟會產生新的簽章金鑰，測試時請重新登入。
+
+網頁登入會將伺服器簽署的分頁憑證儲存在 sessionStorage，並在 API 請求附上 X-Tab-Session。作者和編輯可在兩個分頁各自登入，重新整理或登出其中一頁時，各分頁維持自己的身分。分頁憑證同樣有八小時有效期，關閉該分頁後重新登入。更新此功能後，請在原有分頁各重新登入一次。Swagger UI 仍可使用瀏覽器 cookie 測試登入。

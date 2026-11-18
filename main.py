@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from psycopg import AsyncConnection
 from pydantic import BaseModel, ConfigDict, Field
+from itsdangerous import BadSignature, URLSafeTimedSerializer
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import getDB, lifespan
@@ -77,10 +78,21 @@ class Submission(ReviewSummary):
 
 
 Database = Annotated[AsyncConnection, Depends(getDB)]
+session_secret = getenv("SESSION_SECRET") or token_urlsafe(32)
+tab_sessions = URLSafeTimedSerializer(session_secret, salt="submission-tab-session")
 
 
 async def get_current_user(request: Request, db: Database) -> User:
-    user_id = request.session.get("user_id")
+    tab_token = request.headers.get("X-Tab-Session")
+    if tab_token is not None:
+        try:
+            user_id = tab_sessions.loads(tab_token, max_age=8 * 60 * 60)
+        except BadSignature:
+            raise HTTPException(401, "此分頁尚未登入或登入已失效") from None
+        if type(user_id) is not int:
+            raise HTTPException(401, "登入身分無效")
+    else:
+        user_id = request.session.get("user_id")
     if user_id is None:
         raise HTTPException(401, "請先登入")
     cursor = await db.execute("SELECT id, name, role FROM users WHERE id = %s", (user_id,))
@@ -114,7 +126,7 @@ app = FastAPI(
 )
 app.add_middleware(
     SessionMiddleware,
-    secret_key=getenv("SESSION_SECRET") or token_urlsafe(32),
+    secret_key=session_secret,
     session_cookie="submission_session",
     max_age=8 * 60 * 60,
     same_site="lax",
@@ -127,6 +139,7 @@ editor = APIRouter(prefix="/api/editor/submissions", tags=["編輯"])
 @auth.post("/login", summary="登入")
 async def login(
     request: Request,
+    response: Response,
     db: Database,
     username: Annotated[str, Form(min_length=1, description="帳號 Email")],
     password: Annotated[str, Form(min_length=1, max_length=72)],
@@ -147,6 +160,7 @@ async def login(
     user = User.model_validate(row)
     request.session.clear()
     request.session["user_id"] = user.id
+    response.headers["X-Tab-Session"] = tab_sessions.dumps(user.id)
     return user
 
 

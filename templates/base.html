@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}投稿審查{% endblock %}｜投稿審查</title>
   <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}?v=20261118-bear2">
-  <script src="{{ url_for('static', path='app.js') }}" defer></script>
+  <script src="{{ url_for('static', path='app.js') }}?v=20261118-tab-session" defer></script>
 </head>
 <body data-page="{{ page }}" data-id="{{ submission_id | default('') }}" data-mode="{{ mode | default('') }}">
 <header class="top">
